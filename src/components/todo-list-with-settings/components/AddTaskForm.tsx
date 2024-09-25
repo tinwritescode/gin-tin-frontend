@@ -1,33 +1,36 @@
 import React from "react";
-import { useTodoStore } from "../../../store/todoStore";
+import { BaseKey, useCreate } from "@refinedev/core";
 
-export function AddTaskForm() {
-  const { addTask } = useTodoStore();
-  const [newTask, setNewTask] = React.useState("");
+interface AddTaskFormProps {
+  todolistId: BaseKey;
+}
 
-  const handleSubmit = (e: React.FormEvent) => {
+export const AddTaskForm: React.FC<AddTaskFormProps> = ({ todolistId }) => {
+  const { mutate: createTask } = useCreate();
+  const [title, setTitle] = React.useState("");
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (newTask.trim()) {
-      addTask(newTask);
-      setNewTask("");
-    }
+    createTask({
+      resource: `todolists/${todolistId}/items`,
+      values: {
+        title,
+        todolistId,
+        completed: false,
+      },
+    });
+    setTitle("");
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex mb-4">
+    <form onSubmit={handleSubmit} className="mb-4">
       <input
         type="text"
-        value={newTask}
-        onChange={(e) => setNewTask(e.target.value)}
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
         placeholder="Add a new task"
-        className="flex-1 px-4 py-2 border rounded-l focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="w-full px-3 py-2 border rounded"
       />
-      <button
-        type="submit"
-        className="bg-blue-500 text-white px-4 py-2 rounded-r hover:bg-blue-600 transition-colors"
-      >
-        Add Task
-      </button>
     </form>
   );
-}
+};

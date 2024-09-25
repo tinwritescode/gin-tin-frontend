@@ -1,28 +1,46 @@
-import React from "react";
 import { CheckCircledIcon, GearIcon } from "@radix-ui/react-icons";
-import { useTodoStore } from "../../../store/todoStore";
-import { Settings } from "./Settings";
+import { Text } from "@radix-ui/themes";
+import { useList, useOne, useUpdate } from "@refinedev/core";
+import React, { useEffect, useLayoutEffect } from "react";
 import { AddTaskForm } from "./AddTaskForm";
-import { TaskList } from "./TaskList";
 import { Dashboard } from "./Dashboard";
+import { Settings } from "./Settings";
+import { TaskList } from "./TaskList";
+import { useTodoStore } from "../../../store/todoStore";
 
 export function MainContent() {
-  const {
-    lists,
-    selectedList,
-    completionMode,
-    showSettings,
-    toggleCompletionMode,
-    setShowSettings,
-  } = useTodoStore();
+  const [showSettings, setShowSettings] = React.useState(false);
+  const [completionMode, setCompletionMode] = React.useState(false);
+  const { selectedList, setSelectedList } = useTodoStore();
 
-  const selectedListName =
-    lists.find((list) => list.id === selectedList)?.name || "Tasks";
+  const { data: todolistsData } = useList({ resource: "todolists" });
+  const { data: selectedTodolistData } = useOne({
+    resource: "todolists",
+    id: selectedList as NonNullable<typeof selectedList>,
+    queryOptions: {
+      enabled: !!selectedList,
+    },
+  });
+
+  useLayoutEffect(() => {
+    if (todolistsData && !selectedList) {
+      const listId = todolistsData.data?.[0]?.id;
+      if (listId) {
+        setSelectedList(listId);
+      }
+    }
+  }, [todolistsData]);
+
+  const toggleCompletionMode = () => {
+    setCompletionMode(!completionMode);
+  };
+
+  const selectedTodolistName = selectedTodolistData?.data?.name || "Tasks";
 
   return (
     <div className="flex-1 p-8">
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold">{selectedListName}</h1>
+        <h1 className="text-2xl font-bold">{selectedTodolistName}</h1>
         <div className="flex items-center space-x-2">
           <button
             onClick={toggleCompletionMode}
@@ -54,9 +72,19 @@ export function MainContent() {
       </div>
 
       {showSettings && <Settings />}
-      <AddTaskForm />
-      <TaskList />
-      <Dashboard />
+
+      {selectedTodolistData?.data?.id ? (
+        <>
+          <AddTaskForm todolistId={selectedTodolistData?.data?.id} />
+          <TaskList
+            todolistId={selectedTodolistData?.data?.id}
+            completionMode={completionMode}
+          />
+          <Dashboard todolistId={selectedTodolistData?.data?.id} />
+        </>
+      ) : (
+        <Text color="gray">No todolist selected</Text>
+      )}
     </div>
   );
 }

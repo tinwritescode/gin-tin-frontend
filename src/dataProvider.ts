@@ -139,7 +139,7 @@ export const dataProvider = (
     const url = `${apiUrl}/${resource}/${id}`;
 
     const { headers, method } = meta ?? {};
-    const requestMethod = (method as MethodTypesWithBody) ?? "put";
+    const requestMethod = (method as MethodTypesWithBody) ?? "patch";
 
     const { json } = await httpClient<TData>(url, {
       method: requestMethod,

@@ -2,6 +2,7 @@ import { Authenticated, Refine } from "@refinedev/core";
 import { DevtoolsPanel, DevtoolsProvider } from "@refinedev/devtools";
 import { RefineKbar, RefineKbarProvider } from "@refinedev/kbar";
 import "./App.css";
+import { Theme } from "@radix-ui/themes";
 
 import {
   ErrorComponent,
@@ -104,7 +105,9 @@ function App() {
                         key="authenticated-inner"
                         fallback={<CatchAllNavigate to="/login" />}
                       >
-                        <Outlet />
+                        <Theme>
+                          <Outlet />
+                        </Theme>
                       </Authenticated>
                     }
                   >

@@ -1,9 +1,6 @@
-import React from "react";
-import { Show } from "@refinedev/antd";
 import { useShow } from "@refinedev/core";
 import { Typography } from "antd";
-import { VanishList } from "./components/VanishList";
-import { TodoList } from "../../components/todo-list";
+import React from "react";
 import { TodoListWithSettings } from "../../components/todo-list-with-settings";
 
 const { Title, Text } = Typography;

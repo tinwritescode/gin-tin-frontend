@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { BaseKey } from "@refinedev/core";
 
 interface Task {
   id: number;
@@ -7,7 +8,7 @@ interface Task {
 }
 
 interface List {
-  id: number;
+  id: BaseKey;
   name: string;
   tasks: Task[];
 }
@@ -24,17 +25,15 @@ interface Settings {
 }
 
 interface TodoState {
-  lists: List[];
-  selectedList: number;
+  selectedList: BaseKey | null;
   editingTask: Task | null;
-  editingListId: number | null;
+  editingListId: BaseKey | null;
   stats: Stats;
   completionMode: boolean;
   showSettings: boolean;
   settings: Settings;
   setShowSettings: (showSettings: boolean) => void;
-  addList: () => void;
-  startEditListName: (listId: number | null) => void;
+  startEditListName: (listId: BaseKey | null) => void;
   saveListName: (listName: string) => void;
   addTask: (taskText: string) => void;
   toggleTask: (taskId: number) => void;
@@ -43,7 +42,7 @@ interface TodoState {
   saveEditTask: (taskText: string) => void;
   toggleCompletionMode: () => void;
   toggleSetting: (setting: keyof Settings) => void;
-  setSelectedList: (listId: number) => void;
+  setSelectedList: (listId: BaseKey | null) => void;
   updateStats: () => void;
 }
 
@@ -58,8 +57,7 @@ const shouldResetTasks = (): boolean => {
 };
 
 export const useTodoStore = create<TodoState>()((set, get) => ({
-  lists: [{ id: 1, name: "Default List", tasks: [] }],
-  selectedList: 1,
+  selectedList: null,
   editingTask: null,
   editingListId: null,
   stats: { completed: 0, total: 0 },
@@ -73,28 +71,12 @@ export const useTodoStore = create<TodoState>()((set, get) => ({
     linkedinRecommendations: false,
     topGithubRepositories: false,
   },
-  addList: () => {
-    const newList: List = {
-      id: Date.now(),
-      name: `New List ${get().lists.length + 1}`,
-      tasks: [],
-    };
-    set((state) => ({
-      lists: [...state.lists, newList],
-      selectedList: newList.id,
-    }));
-  },
-  startEditListName: (listId: number | null) => {
+  startEditListName: (listId: BaseKey | null) => {
     set({ editingListId: listId });
   },
   saveListName: (listName: string) => {
     if (listName.trim()) {
       set((state) => ({
-        lists: state.lists.map((list) =>
-          list.id === state.editingListId
-            ? { ...list, name: listName.trim() }
-            : list
-        ),
         editingListId: null,
       }));
     }
@@ -102,81 +84,29 @@ export const useTodoStore = create<TodoState>()((set, get) => ({
   addTask: (taskText: string) => {
     if (taskText.trim()) {
       set((state) => ({
-        lists: state.lists.map((list) =>
-          list.id === state.selectedList
-            ? {
-                ...list,
-                tasks: [
-                  ...list.tasks,
-                  { id: Date.now(), text: taskText, completed: false },
-                ],
-              }
-            : list
-        ),
+        // Logic for adding a task
       }));
       get().updateStats();
     }
   },
   toggleTask: (taskId: number) => {
     set((state) => ({
-      lists: state.lists.map((list) =>
-        list.id === state.selectedList
-          ? {
-              ...list,
-              tasks: list.tasks.map((task) =>
-                task.id === taskId
-                  ? { ...task, completed: !task.completed }
-                  : task
-              ),
-            }
-          : list
-      ),
+      // Logic for toggling a task
     }));
     get().updateStats();
   },
   deleteTask: (taskId: number) => {
     set((state) => ({
-      lists: state.lists.map((list) =>
-        list.id === state.selectedList
-          ? { ...list, tasks: list.tasks.filter((task) => task.id !== taskId) }
-          : list
-      ),
+      // Logic for deleting a task
     }));
     get().updateStats();
   },
   startEditTask: (taskId: number | null) => {
-    if (!get().completionMode) {
-      const selectedList = get().lists.find(
-        (list) => list.id === get().selectedList
-      );
-      const taskToEdit =
-        taskId !== null
-          ? selectedList?.tasks.find((task) => task.id === taskId) || null
-          : null;
-      set({ editingTask: taskToEdit });
-    } else if (taskId !== null) {
-      get().toggleTask(taskId);
-    }
+    // Logic for starting to edit a task
   },
   saveEditTask: (taskText: string) => {
-    if (get().editingTask && taskText.trim()) {
-      set((state) => ({
-        lists: state.lists.map((list) =>
-          list.id === state.selectedList
-            ? {
-                ...list,
-                tasks: list.tasks.map((task) =>
-                  task.id === state.editingTask!.id
-                    ? { ...task, text: taskText.trim() }
-                    : task
-                ),
-              }
-            : list
-        ),
-        editingTask: null,
-      }));
-      get().updateStats();
-    }
+    // Logic for saving edited task
+    get().updateStats();
   },
   toggleCompletionMode: () => {
     set((state) => ({ completionMode: !state.completionMode }));
@@ -189,24 +119,22 @@ export const useTodoStore = create<TodoState>()((set, get) => ({
       },
     }));
   },
-  setSelectedList: (listId: number) => {
+  setSelectedList: (listId: BaseKey | null) => {
     set({ selectedList: listId });
-    get().updateStats();
+    if (listId !== null) {
+      get().updateStats();
+    }
   },
   updateStats: () => {
-    const selectedListTasks =
-      get().lists.find((list) => list.id === get().selectedList)?.tasks || [];
-    const completed = selectedListTasks.filter((task) => task.completed).length;
-    const total = selectedListTasks.length;
-    set({ stats: { completed, total } });
+    // Only update stats if a list is selected
+    if (get().selectedList !== null) {
+      // Logic for updating stats
+    }
   },
 }));
 
 if (shouldResetTasks()) {
   useTodoStore.setState((state) => ({
-    lists: state.lists.map((list) => ({
-      ...list,
-      tasks: list.tasks.map((task) => ({ ...task, completed: false })),
-    })),
+    // Logic for resetting tasks
   }));
 }
